@@ -1,1 +1,0 @@
-{"error":{"code":"InvalidAuthenticationToken","message":"CompactToken parsing failed with error code: 8004920A","innerError":{"date":"2022-06-02T18:19:29","request-id":"249e34e8-3e25-4672-a9bf-868f078a7083","client-request-id":"249e34e8-3e25-4672-a9bf-868f078a7083"}}}
