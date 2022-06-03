@@ -1,5 +1,5 @@
 <script>
-    remove = async () => {
+    async function remove() {
       let keys = await localforage.keys()
       keys.filter(k => k.indexOf('1-1000')>-1).forEach(k => localforage.removeItem(k))
     }
@@ -18,7 +18,7 @@
       sound.play();
     }
     $(window).on("load",()=>{
-      if(sessionStorage.getItem('token')){
+      if(localStorage.getItem('token')){
         $('#play').show();
         $('#remove').show();
       } else {

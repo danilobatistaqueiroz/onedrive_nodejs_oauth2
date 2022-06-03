@@ -1,6 +1,3 @@
-<%- include('./partials/head'); %>
-<script>
-
 function sha256(plain) {
   const encoder = new TextEncoder();
   const data = encoder.encode(plain);
@@ -37,25 +34,16 @@ function generateCodeVerifier() {
   return Array.from(array, dec2hex).join("");
 }
 
-async function load(){
-  let codeVerifier = generateCodeVerifier();
-  let codeChallenge = await generateCodeChallengeFromVerifier(codeVerifier);
-  sessionStorage.setItem('codeVerifier',codeVerifier);
-  sessionStorage.setItem('codeChallenge',codeChallenge);
-  sessionStorage.setItem('csrfToken',uuidv4());
+async function load() {
   let opt = {
-    client_id: 'ny4213rwak4bfv9',
+    client_id: '481a3ba2-ee66-441d-a429-801c4e228d33',
     response_type: 'code',
-    code_challenge: sessionStorage.getItem('codeChallenge'),
-    code_challenge_method: 'S256',
-    redirect_uri: 'http://localhost:3000',
-    state: sessionStorage.getItem('csrfToken')
+    scope: 'onedrive.appfolder',
+    redirect_uri: 'http://localhost:3000/callback',
+    state: localStorage.getItem('csrfToken')
   }
   let query = new URLSearchParams(opt)
-  window.location.href = `https://www.dropbox.com/oauth2/authorize?${query}`
-}
-if(!sessionStorage.getItem('token')){
-  load();
+  return `https://login.live.com/oauth20_authorize.srf?${query}`
 }
 
-</script>
+export {load}

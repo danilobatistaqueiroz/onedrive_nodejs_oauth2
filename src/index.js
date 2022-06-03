@@ -1,83 +1,55 @@
 import * as jsZip from 'jszip';
-import { Howl, Howler } from 'howler';
-import * as localforage from 'localforage';
-
-window.localforage = localforage
+import localforage from 'localforage';
+const { Howl, Howler } = require('howler');
+import {load} from './authorization.js';
 
 //## https://blog.ropnop.com/storing-tokens-in-browser/ ##//
 
-function authorize(){
-  window.location.href = '/authorization'
+async function authorize(){
+  console.log('authorize');
+  let url = await load();
+  window.location.href = url;
 }
 
 function logoff(){
-  sessionStorage.removeItem('codeVerifier');
-  sessionStorage.removeItem('codeChallenge');
-  sessionStorage.removeItem('csrfToken');
-  sessionStorage.removeItem('token');
-  document.location.reload();
-}
-
-function starter(){
-  if(sessionStorage.getItem('codeVerifier')){
-    let ini = window.location.href.indexOf('?code=');
-    let end = window.location.href.indexOf('&',ini);
-    let authCode = window.location.href.substring(ini+'?code='.length,end);
-    let opt = {
-      client_id: 'ny4213rwak4bfv9',
-      grant_type: 'authorization_code',
-      code: authCode,
-      code_verifier: sessionStorage.getItem('codeVerifier'),
-      redirect_uri: 'http://localhost:3000'
-    }
-    sessionStorage.removeItem('codeVerifier')
-    sessionStorage.removeItem('codeChallenge')
-    sessionStorage.removeItem('csrfToken')
-    $.ajax({
-      type: "POST",
-      url: `https://api.dropbox.com/oauth2/token`,
-      data: opt,
-      success: fnreturn,
-      dataType: 'json'
-    });
-    function fnreturn(data,status,jq){
-      sessionStorage.setItem('token',data.access_token);
-      document.location.reload();
-    }
-  }
+  localStorage.removeItem('token');
+  window.document.location.reload();
 }
 
 let selfs = this
 
 async function downloader(res,self){
-jsZip.loadAsync(res).then((zip) => {
-  let o='arraybuffer';
-  zip.forEach(function (relativePath, zipEntry) {
-    zip.files[zipEntry.name].async(o).then((data)=>{
-      localforage.setItem(zipEntry.name,data);
+  jsZip.loadAsync(res.responseText).then((zip) => {
+    const numberOfCallbacks = Object.keys(zip.files).length - 1;
+    let counter = 0;
+    let o='arraybuffer';
+    zip.forEach(function (relativePath, zipEntry) {
+      zip.files[zipEntry.name].async(o).then((data)=>{
+        localforage.set(zipEntry.name,data);
+        self.lstFiles.push(zipEntry.name);
+        counter++;
+        if (counter === numberOfCallbacks) {
+          localforage.set("/1-1000.zip",self.lstFiles.filter(f => f.indexOf('.mp3')>0).join(','));
+        }
+      });
     });
   });
-});
 }
 
-function download(){
-  let http = new XMLHttpRequest();
-  http.open("POST", "https://content.dropboxapi.com/2/files/download", true);
-  http.setRequestHeader('Content-type', 'application/octet-stream; charset=utf-8');
-  http.setRequestHeader('Dropbox-API-Arg', '{"path":"/1-1000.zip"}');
-  http.setRequestHeader('Accept', 'application/zip');
-  http.setRequestHeader('Authorization', `Bearer ${sessionStorage.getItem('token')}`);
-  http.responseType = "arraybuffer";
-  http.onload = function(oEvent) {
-    let arrayBuffer = http.response;
-    let blob = new Blob([arrayBuffer], {type: "application/zip"});
-    downloader(blob,selfs);
-  };
-  http.send();
+function download() {
+  window.location.href="/download"
+}
+function fndownload(data){
+  downloader(data,selfs);
 }
 
+function listDrive() {
+  console.log('href');
+  window.location.href="http://localhost:3000/listdrive"
+}
 
-window.starter = starter
+window.listDrive = listDrive
 window.logoff = logoff
 window.download = download
 window.authorize = authorize
+window.localforage = localforage
